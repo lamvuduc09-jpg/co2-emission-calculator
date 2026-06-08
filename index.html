@@ -2,170 +2,131 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>CO₂ Emission Calculator</title>
+  <title>Green Logistics CO₂ Calculator</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f7f4;
-      padding: 30px;
+    body { font-family: Arial; margin: 0; background: #eef6f1; }
+    .box { max-width: 1000px; margin: 20px auto; background: white; padding: 20px; border-radius: 15px; }
+    h1 { color: #167247; text-align: center; }
+    #map { height: 400px; border-radius: 12px; margin-bottom: 20px; }
+    label { font-weight: bold; display: block; margin-top: 10px; }
+    input, select, button {
+      width: 100%; padding: 10px; margin-top: 5px;
+      border-radius: 8px; border: 1px solid #ccc;
     }
-
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      text-align: center;
-      color: #1f7a4d;
-    }
-
-    label {
-      font-weight: bold;
-      margin-top: 12px;
-      display: block;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
     button {
-      width: 100%;
-      margin-top: 20px;
-      padding: 12px;
-      background: #1f7a4d;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
+      background: #167247; color: white; font-size: 16px; cursor: pointer;
+      margin-top: 15px;
     }
-
-    button:hover {
-      background: #145c38;
-    }
-
     .result {
-      margin-top: 25px;
-      padding: 20px;
-      background: #eaf7ef;
-      border-radius: 10px;
-      display: none;
-    }
-
-    .result h2 {
-      color: #1f7a4d;
-    }
-
-    .rating {
-      font-size: 22px;
-      font-weight: bold;
+      background: #e6f5ec; padding: 15px; margin-top: 20px;
+      border-radius: 10px; display: none;
     }
   </style>
 </head>
-
 <body>
 
-  <div class="container">
-    <h1>CO₂ Emission Calculator</h1>
+<div class="box">
+  <h1>Green Logistics CO₂ Calculator</h1>
 
-    <label>Điểm đi</label>
-    <input type="text" id="origin" placeholder="Ví dụ: Hải Phòng">
+  <p><b>Hướng dẫn:</b> Click 2 điểm trên bản đồ: điểm đi và điểm đến.</p>
 
-    <label>Điểm đến</label>
-    <input type="text" id="destination" placeholder="Ví dụ: Hà Nội">
+  <div id="map"></div>
 
-    <label>Quãng đường vận chuyển (km)</label>
-    <input type="number" id="distance" placeholder="Ví dụ: 120">
+  <label>Quãng đường ước tính (km)</label>
+  <input type="number" id="distance" readonly>
 
-    <label>Khối lượng hàng hóa (tấn)</label>
-    <input type="number" id="cargoWeight" placeholder="Ví dụ: 12">
+  <label>Khối lượng hàng hóa (tấn)</label>
+  <input type="number" id="weight" placeholder="Ví dụ: 20">
 
-    <label>Số chuyến vận chuyển</label>
-    <input type="number" id="trips" placeholder="Ví dụ: 1">
+  <label>Phương thức vận tải</label>
+  <select id="mode">
+    <option value="0.08">Đường bộ - Xe tải</option>
+    <option value="0.03">Đường sắt</option>
+    <option value="0.02">Đường thủy nội địa</option>
+    <option value="0.01">Đường biển</option>
+    <option value="0.50">Hàng không</option>
+  </select>
 
-    <label>Loại phương tiện</label>
-    <select id="vehicle">
-      <option value="12">Xe tải nhỏ - 5 tấn - 12 L/100km</option>
-      <option value="20">Xe tải trung - 10 tấn - 20 L/100km</option>
-      <option value="28">Xe tải lớn - 15 tấn - 28 L/100km</option>
-      <option value="35">Container truck - 40 feet - 35 L/100km</option>
-    </select>
+  <button onclick="calculateCO2()">Tính CO₂</button>
+  <button onclick="resetMap()">Chọn lại điểm</button>
 
-    <label>Loại nhiên liệu</label>
-    <select id="fuel">
-      <option value="2.68">Diesel - 2.68 kg CO₂/lít</option>
-      <option value="2.31">Gasoline - 2.31 kg CO₂/lít</option>
-    </select>
-
-    <button onclick="calculateCO2()">Tính toán phát thải CO₂</button>
-
-    <div class="result" id="resultBox">
-      <h2>Kết quả tính toán</h2>
-      <p><b>Tuyến đường:</b> <span id="route"></span></p>
-      <p><b>Nhiên liệu tiêu thụ:</b> <span id="fuelUsed"></span> lít</p>
-      <p><b>CO₂ phát thải:</b> <span id="co2"></span> kg CO₂</p>
-      <p><b>CO₂/tấn hàng:</b> <span id="co2PerTon"></span> kg CO₂/tấn</p>
-      <p><b>CO₂/tấn-km:</b> <span id="co2PerTonKm"></span> kg CO₂/tấn-km</p>
-      <p><b>Xếp hạng xanh:</b> <span class="rating" id="rating"></span></p>
-      <p><b>Khuyến nghị:</b> <span id="recommendation"></span></p>
-    </div>
+  <div class="result" id="result">
+    <h2>Kết quả</h2>
+    <p><b>Khoảng cách:</b> <span id="rDistance"></span> km</p>
+    <p><b>Khối lượng:</b> <span id="rWeight"></span> tấn</p>
+    <p><b>Lượng CO₂:</b> <span id="rCO2"></span> kg CO₂</p>
+    <p><b>Đánh giá:</b> <span id="rating"></span></p>
   </div>
+</div>
 
-  <script>
-    function calculateCO2() {
-      let origin = document.getElementById("origin").value;
-      let destination = document.getElementById("destination").value;
-      let distance = Number(document.getElementById("distance").value);
-      let cargoWeight = Number(document.getElementById("cargoWeight").value);
-      let trips = Number(document.getElementById("trips").value);
-      let fuelConsumption = Number(document.getElementById("vehicle").value);
-      let emissionFactor = Number(document.getElementById("fuel").value);
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  let map = L.map('map').setView([20.8449, 106.6881], 8); // Hải Phòng
+  let points = [];
+  let markers = [];
+  let line;
 
-      if (distance <= 0 || cargoWeight <= 0 || trips <= 0) {
-        alert("Vui lòng nhập đầy đủ dữ liệu hợp lệ.");
-        return;
-      }
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
-      let fuelUsed = distance * (fuelConsumption / 100) * trips;
-      let co2 = fuelUsed * emissionFactor;
-      let co2PerTon = co2 / cargoWeight;
-      let co2PerTonKm = co2 / (cargoWeight * distance);
+  map.on('click', function(e) {
+    if (points.length >= 2) return;
 
-      let rating = "";
-      let recommendation = "";
+    points.push(e.latlng);
+    let marker = L.marker(e.latlng).addTo(map);
+    markers.push(marker);
 
-      if (co2PerTonKm < 0.05) {
-        rating = "A - Rất xanh";
-        recommendation = "Hiệu quả phát thải tốt. Có thể duy trì phương án vận tải này.";
-      } else if (co2PerTonKm < 0.08) {
-        rating = "B - Trung bình";
-        recommendation = "Nên tăng tỷ lệ lấp đầy xe hoặc tối ưu tuyến đường.";
-      } else {
-        rating = "C - Phát thải cao";
-        recommendation = "Nên xem xét dùng xe lớn hơn, ghép chuyến hoặc chọn phương tiện ít tiêu hao nhiên liệu hơn.";
-      }
-
-      document.getElementById("route").innerText = origin + " → " + destination;
-      document.getElementById("fuelUsed").innerText = fuelUsed.toFixed(2);
-      document.getElementById("co2").innerText = co2.toFixed(2);
-      document.getElementById("co2PerTon").innerText = co2PerTon.toFixed(2);
-      document.getElementById("co2PerTonKm").innerText = co2PerTonKm.toFixed(4);
-      document.getElementById("rating").innerText = rating;
-      document.getElementById("recommendation").innerText = recommendation;
-
-      document.getElementById("resultBox").style.display = "block";
+    if (points.length === 2) {
+      line = L.polyline(points, { color: 'green' }).addTo(map);
+      let distance = map.distance(points[0], points[1]) / 1000;
+      document.getElementById("distance").value = distance.toFixed(2);
     }
-  </script>
+  });
+
+  function calculateCO2() {
+    let distance = Number(document.getElementById("distance").value);
+    let weight = Number(document.getElementById("weight").value);
+    let factor = Number(document.getElementById("mode").value);
+
+    if (distance <= 0 || weight <= 0) {
+      alert("Vui lòng chọn 2 điểm trên bản đồ và nhập khối lượng hàng.");
+      return;
+    }
+
+    let co2 = distance * weight * factor;
+
+    let rating = "";
+    if (co2 < 100) {
+      rating = "A - Phát thải thấp";
+    } else if (co2 < 500) {
+      rating = "B - Phát thải trung bình";
+    } else {
+      rating = "C - Phát thải cao";
+    }
+
+    document.getElementById("rDistance").innerText = distance.toFixed(2);
+    document.getElementById("rWeight").innerText = weight;
+    document.getElementById("rCO2").innerText = co2.toFixed(2);
+    document.getElementById("rating").innerText = rating;
+    document.getElementById("result").style.display = "block";
+  }
+
+  function resetMap() {
+    points = [];
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+
+    if (line) {
+      map.removeLayer(line);
+      line = null;
+    }
+
+    document.getElementById("distance").value = "";
+    document.getElementById("result").style.display = "none";
+  }
+</script>
 
 </body>
 </html>
