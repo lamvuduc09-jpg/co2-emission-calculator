@@ -1,182 +1,526 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Green Logistics CO₂ Calculator</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      background: #eef6f1;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #e9f8ef, #f8fff9);
+      color: #1f2d2b;
     }
 
-    .box {
-      max-width: 1000px;
-      margin: 20px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-    }
-
-    h1 {
-      color: #167247;
+    header {
+      background: linear-gradient(135deg, #0f6b3d, #1ea15d);
+      color: white;
+      padding: 35px 20px;
       text-align: center;
+      border-bottom-left-radius: 35px;
+      border-bottom-right-radius: 35px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 34px;
+    }
+
+    header p {
+      margin-top: 10px;
+      font-size: 16px;
+      opacity: 0.95;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 25px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      margin-bottom: 25px;
     }
 
     #map {
-      height: 400px;
-      border-radius: 12px;
-      margin-bottom: 20px;
+      height: 420px;
+      border-radius: 18px;
+      overflow: hidden;
+      margin-top: 15px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
     }
 
     label {
       font-weight: bold;
+      margin-bottom: 6px;
       display: block;
-      margin-top: 10px;
     }
 
-    input, select, button {
+    input, select {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
+      padding: 13px;
+      border: 1px solid #cfded5;
+      border-radius: 12px;
+      font-size: 15px;
+      background: #fbfffc;
     }
 
     button {
-      background: #167247;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #147a46;
       color: white;
       font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
-      margin-top: 15px;
+      margin-top: 12px;
     }
 
-    .result {
-      background: #e6f5ec;
-      padding: 15px;
-      margin-top: 20px;
-      border-radius: 10px;
+    button:hover {
+      background: #0f5d36;
+    }
+
+    .btn-secondary {
+      background: #e7f4ec;
+      color: #137143;
+      border: 1px solid #b8dec8;
+    }
+
+    .btn-secondary:hover {
+      background: #d5ecdf;
+    }
+
+    .summary {
       display: none;
+    }
+
+    .result-boxes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-top: 18px;
+    }
+
+    .mini-box {
+      background: #f1faf5;
+      padding: 18px;
+      border-radius: 15px;
+      border-left: 5px solid #159653;
+    }
+
+    .mini-box h3 {
+      margin: 0;
+      font-size: 14px;
+      color: #49645a;
+    }
+
+    .mini-box p {
+      margin: 8px 0 0;
+      font-size: 22px;
+      font-weight: bold;
+      color: #126c3f;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 18px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th {
+      background: #147a46;
+      color: white;
+      padding: 13px;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e0eee6;
+      text-align: center;
+    }
+
+    tr:nth-child(even) {
+      background: #f6fbf8;
+    }
+
+    .recommendation {
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 15px;
+      background: #eaf8ef;
+      border-left: 6px solid #1ca45c;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .note {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 12px;
+      background: #fff8e6;
+      color: #665000;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: #dff5e8;
+      color: #0f6b3d;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      color: #678075;
+      font-size: 14px;
+    }
+
+    @media (max-width: 800px) {
+      .grid, .result-boxes {
+        grid-template-columns: 1fr;
+      }
+
+      header h1 {
+        font-size: 26px;
+      }
+
+      #map {
+        height: 350px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="box">
-    <h1>Green Logistics CO₂ Calculator</h1>
+<header>
+  <h1>🌱 Green Logistics CO₂ Calculator</h1>
+  <p>Hệ thống tính toán và so sánh phát thải CO₂ trong vận tải hàng hóa</p>
+</header>
 
-    <p><b>Hướng dẫn:</b> Click 2 điểm trên bản đồ: điểm đi và điểm đến.</p>
+<div class="container">
 
+  <div class="card">
+    <h2>🗺️ Chọn tuyến vận tải</h2>
+    <p>Click 2 điểm trên bản đồ để chọn <b>điểm đi</b> và <b>điểm đến</b>.</p>
     <div id="map"></div>
+  </div>
 
-    <label>Quãng đường ước tính (km)</label>
-    <input type="number" id="distance" readonly>
+  <div class="card">
+    <h2>📦 Thông tin chuyến hàng</h2>
 
-    <label>Khối lượng hàng hóa (tấn)</label>
-    <input type="number" id="weight" placeholder="Ví dụ: 20">
+    <div class="grid">
+      <div>
+        <label>Tên điểm đi</label>
+        <input type="text" id="originName" placeholder="Ví dụ: Hải Phòng">
+      </div>
 
-    <label>Phương thức vận tải</label>
-    <select id="mode">
-      <option value="0.08">Đường bộ - Xe tải</option>
-      <option value="0.03">Đường sắt</option>
-      <option value="0.02">Đường thủy nội địa</option>
-      <option value="0.01">Đường biển</option>
-      <option value="0.50">Hàng không</option>
-    </select>
+      <div>
+        <label>Tên điểm đến</label>
+        <input type="text" id="destinationName" placeholder="Ví dụ: Hà Nội">
+      </div>
 
-    <button onclick="calculateCO2()">Tính CO₂</button>
-    <button onclick="resetMap()">Chọn lại điểm</button>
+      <div>
+        <label>Quãng đường ước tính (km)</label>
+        <input type="number" id="distance" readonly>
+      </div>
 
-    <div class="result" id="result">
-      <h2>Kết quả</h2>
-      <p><b>Khoảng cách:</b> <span id="rDistance"></span> km</p>
-      <p><b>Khối lượng:</b> <span id="rWeight"></span> tấn</p>
-      <p><b>Lượng CO₂:</b> <span id="rCO2"></span> kg CO₂</p>
-      <p><b>Đánh giá:</b> <span id="rating"></span></p>
+      <div>
+        <label>Khối lượng hàng hóa (tấn)</label>
+        <input type="number" id="weight" placeholder="Ví dụ: 20">
+      </div>
+
+      <div>
+        <label>Phương thức vận tải muốn tính</label>
+        <select id="mode">
+          <option value="road">Đường bộ - Xe tải</option>
+          <option value="rail">Đường sắt</option>
+          <option value="inland">Đường thủy nội địa</option>
+          <option value="sea">Đường biển</option>
+          <option value="air">Hàng không</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Mục tiêu ưu tiên</label>
+        <select id="priority">
+          <option value="green">Ưu tiên phát thải thấp</option>
+          <option value="balanced">Cân bằng môi trường và thực tế vận tải</option>
+        </select>
+      </div>
+    </div>
+
+    <button onclick="calculateCO2()">Tính toán và so sánh CO₂</button>
+    <button class="btn-secondary" onclick="resetMap()">Chọn lại điểm</button>
+  </div>
+
+  <div class="card summary" id="summary">
+    <h2>📊 Kết quả tính toán</h2>
+
+    <p><b>Tuyến vận tải:</b> <span id="routeName"></span></p>
+    <p><b>Phương thức đã chọn:</b> <span id="selectedMode"></span></p>
+    <p><b>Hệ số phát thải sử dụng:</b> <span id="selectedFactor"></span> kg CO₂/tấn-km</p>
+    <span class="badge" id="rating"></span>
+
+    <div class="result-boxes">
+      <div class="mini-box">
+        <h3>Khoảng cách</h3>
+        <p><span id="rDistance"></span> km</p>
+      </div>
+
+      <div class="mini-box">
+        <h3>Khối lượng</h3>
+        <p><span id="rWeight"></span> tấn</p>
+      </div>
+
+      <div class="mini-box">
+        <h3>Tổng CO₂</h3>
+        <p><span id="rCO2"></span> kg</p>
+      </div>
+
+      <div class="mini-box">
+        <h3>CO₂/tấn-km</h3>
+        <p><span id="rFactor"></span></p>
+      </div>
+    </div>
+
+    <h3>🔍 So sánh giữa các phương thức vận tải</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Phương thức</th>
+          <th>Hệ số phát thải</th>
+          <th>CO₂ phát thải</th>
+          <th>Đánh giá</th>
+        </tr>
+      </thead>
+      <tbody id="comparisonTable"></tbody>
+    </table>
+
+    <div class="recommendation" id="recommendation"></div>
+
+    <div class="note">
+      <b>Lưu ý:</b> Khoảng cách hiện tại được tính theo đường thẳng giữa hai điểm trên bản đồ, chưa phải khoảng cách tuyến đường thực tế.
+      Các hệ số phát thải trong bản demo được dùng để mô phỏng và so sánh trong nghiên cứu.
+      Khi viết báo cáo chính thức, cần trích dẫn nguồn hệ số phát thải từ IPCC, GLEC Framework, DEFRA hoặc tài liệu chuyên ngành.
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</div>
 
-  <script>
-    let map = L.map('map').setView([20.8449, 106.6881], 8);
-    let points = [];
-    let markers = [];
-    let line;
+<footer>
+  Green Logistics Decision Support System | CO₂ Emission Calculator
+</footer>
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    map.on('click', function(e) {
-      if (points.length >= 2) return;
+<script>
+  const emissionFactors = {
+    road: {
+      name: "Đường bộ - Xe tải",
+      factor: 0.08,
+      note: "Linh hoạt, phù hợp tuyến ngắn và giao hàng tận nơi nhưng phát thải khá cao."
+    },
+    rail: {
+      name: "Đường sắt",
+      factor: 0.03,
+      note: "Phù hợp với hàng khối lượng lớn, tuyến dài và phát thải thấp hơn đường bộ."
+    },
+    inland: {
+      name: "Đường thủy nội địa",
+      factor: 0.02,
+      note: "Phù hợp vận chuyển hàng nặng, chi phí thấp, phát thải thấp."
+    },
+    sea: {
+      name: "Đường biển",
+      factor: 0.01,
+      note: "Phát thải thấp nhất, phù hợp tuyến dài và hàng container."
+    },
+    air: {
+      name: "Hàng không",
+      factor: 0.50,
+      note: "Nhanh nhưng phát thải rất cao, chỉ phù hợp hàng giá trị cao hoặc cần gấp."
+    }
+  };
 
-      points.push(e.latlng);
+  let map = L.map('map').setView([20.8449, 106.6881], 8);
+  let points = [];
+  let markers = [];
+  let line;
 
-      let marker = L.marker(e.latlng).addTo(map);
-      markers.push(marker);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
-      if (points.length === 2) {
-        line = L.polyline(points, { color: 'green' }).addTo(map);
+  map.on('click', function(e) {
+    if (points.length >= 2) return;
 
-        let distance = map.distance(points[0], points[1]) / 1000;
-        document.getElementById("distance").value = distance.toFixed(2);
+    points.push(e.latlng);
+
+    let label = points.length === 1 ? "Điểm đi" : "Điểm đến";
+
+    let marker = L.marker(e.latlng)
+      .addTo(map)
+      .bindPopup(label)
+      .openPopup();
+
+    markers.push(marker);
+
+    if (points.length === 2) {
+      line = L.polyline(points, {
+        color: "#127a45",
+        weight: 4
+      }).addTo(map);
+
+      let distance = map.distance(points[0], points[1]) / 1000;
+      document.getElementById("distance").value = distance.toFixed(2);
+    }
+  });
+
+  function calculateCO2() {
+    let distance = Number(document.getElementById("distance").value);
+    let weight = Number(document.getElementById("weight").value);
+    let selected = document.getElementById("mode").value;
+    let priority = document.getElementById("priority").value;
+
+    let origin = document.getElementById("originName").value || "Điểm đi";
+    let destination = document.getElementById("destinationName").value || "Điểm đến";
+
+    if (distance <= 0 || weight <= 0) {
+      alert("Vui lòng chọn 2 điểm trên bản đồ và nhập khối lượng hàng hóa.");
+      return;
+    }
+
+    let factor = emissionFactors[selected].factor;
+    let co2 = distance * weight * factor;
+
+    document.getElementById("summary").style.display = "block";
+
+    document.getElementById("routeName").innerText = origin + " → " + destination;
+    document.getElementById("selectedMode").innerText = emissionFactors[selected].name;
+    document.getElementById("selectedFactor").innerText = factor;
+    document.getElementById("rDistance").innerText = distance.toFixed(2);
+    document.getElementById("rWeight").innerText = weight;
+    document.getElementById("rCO2").innerText = co2.toFixed(2);
+    document.getElementById("rFactor").innerText = factor;
+
+    let rating = "";
+
+    if (factor <= 0.02) {
+      rating = "A - Phát thải thấp";
+    } else if (factor <= 0.08) {
+      rating = "B - Phát thải trung bình";
+    } else {
+      rating = "C - Phát thải cao";
+    }
+
+    document.getElementById("rating").innerText = rating;
+
+    let table = document.getElementById("comparisonTable");
+    table.innerHTML = "";
+
+    let bestMode = null;
+    let bestCO2 = Infinity;
+
+    for (let key in emissionFactors) {
+      let item = emissionFactors[key];
+      let itemCO2 = distance * weight * item.factor;
+
+      if (itemCO2 < bestCO2) {
+        bestCO2 = itemCO2;
+        bestMode = item;
       }
+
+      let evaluation = "";
+
+      if (item.factor <= 0.02) {
+        evaluation = "Thấp";
+      } else if (item.factor <= 0.08) {
+        evaluation = "Trung bình";
+      } else {
+        evaluation = "Cao";
+      }
+
+      table.innerHTML += `
+        <tr>
+          <td>${item.name}</td>
+          <td>${item.factor} kg CO₂/tấn-km</td>
+          <td>${itemCO2.toFixed(2)} kg CO₂</td>
+          <td>${evaluation}</td>
+        </tr>
+      `;
+    }
+
+    let recommendation = "";
+
+    if (priority === "green") {
+      recommendation = `
+        <b>Khuyến nghị:</b> Phương án có phát thải thấp nhất là 
+        <b>${bestMode.name}</b> với khoảng <b>${bestCO2.toFixed(2)} kg CO₂</b>.
+        Doanh nghiệp nên ưu tiên phương thức này nếu mục tiêu chính là giảm phát thải và phát triển logistics xanh.
+      `;
+    } else {
+      recommendation = `
+        <b>Khuyến nghị:</b> Nếu xét cân bằng giữa tính thực tế và môi trường, doanh nghiệp nên xem xét 
+        <b>đường sắt hoặc đường thủy nội địa</b> cho hàng hóa khối lượng lớn.
+        Đường bộ vẫn phù hợp với tuyến ngắn và giao hàng tận nơi, nhưng cần tối ưu tải trọng và ghép chuyến để giảm phát thải.
+      `;
+    }
+
+    recommendation += `<br><br><b>Nhận xét về phương thức đã chọn:</b> ${emissionFactors[selected].note}`;
+
+    document.getElementById("recommendation").innerHTML = recommendation;
+
+    document.getElementById("summary").scrollIntoView({
+      behavior: "smooth"
+    });
+  }
+
+  function resetMap() {
+    points = [];
+
+    markers.forEach(function(marker) {
+      map.removeLayer(marker);
     });
 
-    function calculateCO2() {
-      let distance = Number(document.getElementById("distance").value);
-      let weight = Number(document.getElementById("weight").value);
-      let factor = Number(document.getElementById("mode").value);
+    markers = [];
 
-      if (distance <= 0 || weight <= 0) {
-        alert("Vui lòng chọn 2 điểm trên bản đồ và nhập khối lượng hàng.");
-        return;
-      }
-
-      let co2 = distance * weight * factor;
-
-      let rating = "";
-
-      if (co2 < 100) {
-        rating = "A - Phát thải thấp";
-      } else if (co2 < 500) {
-        rating = "B - Phát thải trung bình";
-      } else {
-        rating = "C - Phát thải cao";
-      }
-
-      document.getElementById("rDistance").innerText = distance.toFixed(2);
-      document.getElementById("rWeight").innerText = weight;
-      document.getElementById("rCO2").innerText = co2.toFixed(2);
-      document.getElementById("rating").innerText = rating;
-
-      document.getElementById("result").style.display = "block";
+    if (line) {
+      map.removeLayer(line);
+      line = null;
     }
 
-    function resetMap() {
-      points = [];
-
-      markers.forEach(function(marker) {
-        map.removeLayer(marker);
-      });
-
-      markers = [];
-
-      if (line) {
-        map.removeLayer(line);
-        line = null;
-      }
-
-      document.getElementById("distance").value = "";
-      document.getElementById("result").style.display = "none";
-    }
-  </script>
+    document.getElementById("distance").value = "";
+    document.getElementById("summary").style.display = "none";
+  }
+</script>
 
 </body>
 </html>
